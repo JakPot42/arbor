@@ -85,7 +85,11 @@ app.add_exception_handler(RateLimitExceeded, _rate_limit_exceeded_handler)
 
 app.mount("/static/cfius", StaticFiles(directory=_HERE / "static" / "cfius"), name="cfius_static")
 app.mount("/static/ghosttrace", StaticFiles(directory=_HERE / "static" / "ghosttrace"), name="ghosttrace_static")
-app.mount("/static/dib", StaticFiles(directory=_HERE / "static" / "dib"), name="dib_static")
+# No /static/dib mount: DIB Monitor's original project never had a static/
+# directory at all (its templates use inline styles, not a stylesheet) --
+# static/dib/ locally was an empty, never-git-tracked leftover, and this
+# mount crashed the real Render deploy with a RuntimeError the moment it
+# tried to serve a directory that doesn't exist in the pushed repo.
 app.mount("/static/shared", StaticFiles(directory=_HERE / "static" / "shared"), name="shared_static")
 
 app.include_router(company_router.router)
