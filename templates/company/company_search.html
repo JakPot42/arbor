@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Arbor — Search{% endblock %}
+{% block content %}
+<h1>Search a company</h1>
+<p class="muted">
+  See a company's GhostTrace ownership trace, CFIUS jurisdiction status, DIB
+  Monitor financial risk, Debt Exposure Monitor lender concentration, and
+  Pre-Acquisition Brief M&amp;A intelligence, from one page.
+</p>
+
+<form action="/search" method="post" class="search-form">
+  <input type="text" name="query" placeholder="Company name..." value="{{ query or '' }}" required autofocus>
+  <button type="submit" class="button-primary">Search</button>
+</form>
+
+{% if search_error %}
+<div class="error-box">{{ search_error }}</div>
+{% endif %}
+
+{% if candidates %}
+<h2>Possible matches</h2>
+<table>
+  <tr><th>Company</th><th>Match confidence</th><th></th></tr>
+  {% for company, score in candidates %}
+  <tr>
+    <td>{{ company.canonical_name }}</td>
+    <td>{{ "%.0f"|format(score) }}%</td>
+    <td><a href="/company/{{ company.id }}">View →</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+<h2>Recently analyzed</h2>
+{% if recent_companies %}
+<ul class="recent-list">
+  {% for company in recent_companies %}
+  <li>
+    <a href="/company/{{ company.id }}">{{ company.canonical_name }}</a>
+    {% if company.ticker %}<span class="muted">({{ company.ticker }})</span>{% endif %}
+  </li>
+  {% endfor %}
+</ul>
+{% else %}
+<p class="muted">No companies analyzed yet. Try GhostTrace, CFIUS Screener, DIB Monitor, Debt Exposure Monitor, or Pre-Acquisition Brief first.</p>
+{% endif %}
+{% endblock %}

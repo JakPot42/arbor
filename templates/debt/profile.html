@@ -1,0 +1,81 @@
+{% extends "base.html" %}
+{% block title %}{{ profile.company_name }} — Debt Exposure Monitor{% endblock %}
+{% block content %}
+<p class="breadcrumb"><a href="/debt/">&larr; Debt Exposure Monitor</a></p>
+
+<div class="company-header">
+  <h1>{{ profile.company_name }}</h1>
+  <div class="meta">
+    {% if profile.cik %}CIK: {{ profile.cik }}{% else %}CIK: unknown (demo entity){% endif %}
+  </div>
+</div>
+
+{% if risk %}
+<div class="detail-section">
+  <h2>Lender-Concentration Risk</h2>
+  <div class="scorecard">
+    <span class="score-number">{{ risk.score }}</span>
+    <span class="score-denom">/100</span>
+    <span class="badge badge-{{ risk.tier|lower }}">{{ risk.tier }}</span>
+  </div>
+  <p class="muted">
+    Concentration (relationship-count HHI): {{ risk.concentration.hhi }} ({{ risk.concentration.tier }}).
+    OFAC hits: {{ risk.ofac_hit_count }}. BIS hits: {{ risk.bis_hit_count }}.
+    Foreign state-connected lender hits: {{ risk.foreign_state_hit_count }}.
+  </p>
+</div>
+{% endif %}
+
+<div class="detail-section">
+  <h2>Disclosed Lenders</h2>
+  <table>
+    <tr><th>Lender</th><th>Instrument</th><th>Role</th><th>Amount / Terms</th><th>Source</th></tr>
+    {% for l in lenders %}
+    <tr>
+      <td>{{ l.canonical_name }}</td>
+      <td>{{ l.instrument_type }}</td>
+      <td>{{ l.role }}</td>
+      <td>{{ l.amount_text }}</td>
+      <td>{{ l.source_filing }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+
+<div class="detail-section">
+  <h2>Screening Hits</h2>
+  {% if screening_hits %}
+  <table>
+    <tr><th>List</th><th>Lender</th><th>Matched name</th><th>Score</th><th>Detail</th></tr>
+    {% for h in screening_hits %}
+    <tr>
+      <td>{{ h.list_name }}</td>
+      <td>{{ h.lender_name }}</td>
+      <td>{{ h.matched_name }}</td>
+      <td>{{ h.score }}</td>
+      <td>{{ h.detail }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+  <p class="muted">All hits above are candidates from fuzzy name matching -- human verification required before any compliance action.</p>
+  {% else %}
+  <p class="muted">No OFAC, BIS, or foreign state-connected lender matches among disclosed lenders.</p>
+  {% endif %}
+</div>
+
+<div class="detail-section">
+  <h2>FINRA TRACE Bond Data</h2>
+  {% if profile.trace_available %}
+  <p>Available.</p>
+  {% else %}
+  <p class="muted">{{ profile.trace_note }}</p>
+  {% endif %}
+</div>
+
+{% if profile.brief_text %}
+<div class="detail-section">
+  <h2>Analyst Brief</h2>
+  <div class="prewrap">{{ profile.brief_text }}</div>
+</div>
+{% endif %}
+{% endblock %}

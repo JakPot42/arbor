@@ -1,0 +1,121 @@
+{% extends "dib/base.html" %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+  <div>
+    <a href="/dib/supplier/{{ supplier.id }}" style="color:#7f8c8d; text-decoration:none; font-size:12px;">← {{ supplier.name }}</a>
+    <h2 style="margin-top:4px; border:none; padding:0; font-size:20px;">Earnings Call Signals — {{ supplier.name }}</h2>
+    <div style="font-size:12px; color:#7f8c8d;">8-K Exhibit 99 · Forward-Looking Supply Chain Signals</div>
+  </div>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    {% if not (demo_mode and supplier.is_demo) %}
+    <form method="post" action="/dib/supplier/{{ supplier.id }}/analyze-earnings">
+      <button type="submit" class="btn btn-primary">▶ Fetch Latest 8-K</button>
+    </form>
+    {% endif %}
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+{% if demo_mode and supplier.is_demo %}
+<div class="alert alert-info">
+  <strong>Demo data.</strong> Earnings signals are pre-seeded from a fictional Q4 2025 earnings call
+  transcript. Signals represent the kind of qualitative forward-looking language executives use
+  in earnings calls before formal 10-K disclosures catch up.
+</div>
+{% endif %}
+
+{% if signal %}
+
+<!-- Signal flags -->
+<div class="risk-scorecard" style="margin-bottom:16px;">
+  <div class="risk-box" style="background:{% if signal.export_control_flag %}#e74c3c{% else %}#2ecc71{% endif %};">
+    <div class="rlabel">Export Control</div>
+    <div class="rscore" style="font-size:20px;">{% if signal.export_control_flag %}⚠{% else %}✓{% endif %}</div>
+    <div class="rlevel">{% if signal.export_control_flag %}FLAGGED{% else %}CLEAR{% endif %}</div>
+  </div>
+  <div class="risk-box" style="background:{% if signal.supplier_diversion_flag %}#e74c3c{% else %}#2ecc71{% endif %};">
+    <div class="rlabel">Supplier Diversion</div>
+    <div class="rscore" style="font-size:20px;">{% if signal.supplier_diversion_flag %}⚠{% else %}✓{% endif %}</div>
+    <div class="rlevel">{% if signal.supplier_diversion_flag %}ACTIVE{% else %}NONE{% endif %}</div>
+  </div>
+  <div class="risk-box" style="background:#2c3e50;">
+    <div class="rlabel">Filing Date</div>
+    <div class="rscore" style="font-size:16px;">{{ signal.filing_date or "Unknown" }}</div>
+    <div class="rlevel">{{ signal.extraction_confidence | upper }}</div>
+  </div>
+</div>
+
+{% if signal.key_quote %}
+<!-- Key quote -->
+<div class="card" style="border-left:4px solid #e74c3c;">
+  <h2>Key Quote</h2>
+  <blockquote style="font-style:italic; color:#555; font-size:13px; line-height:1.7; margin:0; padding:10px 14px; background:#fff5f5; border-radius:4px;">
+    "{{ signal.key_quote }}"
+  </blockquote>
+</div>
+{% endif %}
+
+<!-- Extracted signals -->
+<div class="card">
+  <h2>Extracted Supply Chain Signals</h2>
+  <p style="font-size:12px; color:#7f8c8d; margin-bottom:12px;">
+    Claude Haiku extracted the following forward-looking signals from the most recent
+    8-K Exhibit 99 filing (earnings call transcript or press release).
+    These signals often precede formal 10-K disclosure by one or more quarters.
+  </p>
+  {% if signals_list %}
+  <ul style="margin:0; padding-left:20px;">
+    {% for sig in signals_list %}
+    <li style="font-size:13px; line-height:1.6; color:#2c3e50; margin-bottom:8px; padding:8px 12px; background:#f8f9fa; border-radius:4px; list-style:none; border-left:3px solid #2980b9; margin-left:-20px; margin-right:0;">
+      {{ sig }}
+    </li>
+    {% endfor %}
+  </ul>
+  {% else %}
+  <p style="color:#7f8c8d; font-size:13px;">No specific signals extracted.</p>
+  {% endif %}
+</div>
+
+{% if signal.claude_brief %}
+<!-- Claude analysis -->
+<div class="card">
+  <h2>Analyst Brief</h2>
+  <p style="font-size:13px; line-height:1.6; color:#555;">{{ signal.claude_brief }}</p>
+</div>
+{% endif %}
+
+{% if signal.accession_number %}
+<div style="font-size:11px; color:#7f8c8d; margin-bottom:16px;">
+  SEC Accession: {{ signal.accession_number }} ·
+  Analyzed: {{ signal.assessed_at.strftime('%Y-%m-%d') if signal.assessed_at else "Unknown" }}
+</div>
+{% endif %}
+
+<!-- Limitations -->
+<div class="card limitations">
+  <h2>Limitations</h2>
+  <ul>
+    <li>Earnings call signals are qualitative and forward-looking; management language may not match eventual outcomes.</li>
+    <li>Claude extracts signals from 8-K Exhibit 99 press releases. Actual call transcript PDFs (if filed separately) may contain additional language.</li>
+    <li>Export control and diversion flags are research indicators, not legal determinations.</li>
+    <li>Always read the original SEC filing before acting on any extracted signal.</li>
+  </ul>
+</div>
+
+{% else %}
+<div class="card">
+  <p style="color:#7f8c8d; font-size:13px;">
+    No earnings call data yet for this supplier.
+    {% if not (demo_mode and supplier.is_demo) %}
+    Click <strong>▶ Fetch Latest 8-K</strong> to pull the most recent 8-K Exhibit 99 from SEC EDGAR
+    and extract qualitative supply chain signals.
+    {% endif %}
+  </p>
+</div>
+{% endif %}
+
+{% endblock %}

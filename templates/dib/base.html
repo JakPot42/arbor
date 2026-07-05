@@ -1,0 +1,75 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{{ title }}</title>
+  <style>
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    body { font-family: 'Segoe UI', system-ui, sans-serif; background: #f4f6f9; color: #2c3e50; font-size: 14px; }
+    header { background: #1a252f; color: white; padding: 14px 24px; display: flex; align-items: center; gap: 16px; }
+    header h1 { font-size: 18px; font-weight: 600; }
+    header .subtitle { font-size: 11px; color: #7f8c8d; }
+    nav a { color: #bdc3c7; text-decoration: none; margin-left: 20px; font-size: 13px; }
+    nav a:hover { color: white; }
+    .demo-banner { background: #e74c3c; color: white; text-align: center; padding: 6px; font-size: 12px; font-weight: 600; }
+    .container { max-width: 1100px; margin: 0 auto; padding: 24px 20px; }
+    .card { background: white; border-radius: 6px; box-shadow: 0 1px 4px rgba(0,0,0,.08); padding: 20px; margin-bottom: 20px; }
+    h2 { font-size: 15px; font-weight: 600; color: #2c3e50; margin-bottom: 12px; border-bottom: 1px solid #ecf0f1; padding-bottom: 6px; }
+    h3 { font-size: 13px; font-weight: 600; color: #2c3e50; margin: 14px 0 8px; }
+    table { width: 100%; border-collapse: collapse; font-size: 13px; }
+    th { background: #2c3e50; color: white; padding: 8px 10px; text-align: left; font-weight: 500; }
+    td { padding: 7px 10px; border-bottom: 1px solid #ecf0f1; }
+    tr:hover td { background: #f8f9fa; }
+    .badge { display: inline-block; padding: 3px 9px; border-radius: 3px; font-size: 11px; font-weight: 700; color: white; }
+    .badge-low { background: #2ecc71; }
+    .badge-medium { background: #f39c12; }
+    .badge-high { background: #e74c3c; }
+    .badge-critical { background: #8e44ad; }
+    .badge-unknown { background: #95a5a6; }
+    .btn { display: inline-block; padding: 8px 18px; border-radius: 4px; border: none; cursor: pointer; font-size: 13px; font-weight: 600; text-decoration: none; }
+    .btn-primary { background: #2980b9; color: white; }
+    .btn-primary:hover { background: #2471a3; }
+    .btn-danger { background: #e74c3c; color: white; }
+    .btn-success { background: #27ae60; color: white; }
+    .btn-outline { background: transparent; border: 1px solid #bdc3c7; color: #2c3e50; }
+    form { display: inline; }
+    input[type=text], select { padding: 7px 10px; border: 1px solid #bdc3c7; border-radius: 4px; font-size: 13px; }
+    .metric-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(180px, 1fr)); gap: 12px; margin-bottom: 16px; }
+    .metric-card { background: #f8f9fa; border: 1px solid #ecf0f1; border-radius: 5px; padding: 12px 14px; }
+    .metric-card .label { font-size: 11px; color: #7f8c8d; text-transform: uppercase; letter-spacing: .5px; }
+    .metric-card .value { font-size: 20px; font-weight: 700; margin-top: 4px; }
+    .metric-card .sub { font-size: 11px; color: #7f8c8d; margin-top: 2px; }
+    .risk-scorecard { display: flex; gap: 12px; flex-wrap: wrap; margin-bottom: 16px; }
+    .risk-box { flex: 1; min-width: 150px; border-radius: 5px; padding: 14px; color: white; text-align: center; }
+    .risk-box .rlabel { font-size: 11px; opacity: .85; text-transform: uppercase; }
+    .risk-box .rscore { font-size: 28px; font-weight: 800; }
+    .risk-box .rlevel { font-size: 13px; font-weight: 600; margin-top: 2px; }
+    .alert { padding: 10px 14px; border-radius: 4px; font-size: 13px; margin-bottom: 16px; }
+    .alert-error { background: #fde8e8; border-left: 4px solid #e74c3c; color: #922b21; }
+    .alert-info { background: #eaf4fb; border-left: 4px solid #2980b9; color: #1a5276; }
+    .flag-row td { background: #fff5f5; }
+    .limitations { font-size: 12px; color: #7f8c8d; }
+    .limitations li { margin: 4px 0 4px 16px; }
+  </style>
+</head>
+<body>
+<header>
+  <div>
+    <h1>DIB Financial Resilience Monitor</h1>
+    <div class="subtitle">Defense Industrial Base · Supply Chain Financial Risk · DoD Industrial Base Policy</div>
+  </div>
+  <nav>
+    <a href="/dib/">Dashboard</a>
+    <a href="/dib/portfolio">Portfolio View</a>
+    <a href="/dib/api/stats">API Stats</a>
+  </nav>
+</header>
+{% if demo_mode %}
+<div class="demo-banner">DEMO MODE — All data is fictional. Not for operational use.</div>
+{% endif %}
+<div class="container">
+{% block content %}{% endblock %}
+</div>
+</body>
+</html>

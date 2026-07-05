@@ -1,0 +1,165 @@
+{% extends "cfius/base.html" %}
+{% block content %}
+<p class="breadcrumb"><a href="/cfius/">← Dashboard</a></p>
+
+<h1>{{ s.acquirer_name }} → {{ s.us_business_name }}</h1>
+<p class="muted">{{ s.acquirer_country }} acquirer ·
+  {{ "%g" | format(s.voting_interest_pct) }}% voting interest
+  {% if s.is_demo %}<span class="tag tag-demo">demo scenario</span>{% endif %}
+</p>
+
+<div class="verdict verdict-{{ s.outcome | lower }}">
+  <h2>{{ outcome_labels[s.outcome] }}</h2>
+  {% if s.outcome == "MANDATORY_DECLARATION" %}
+  <p>A CFIUS declaration is <strong>required by law</strong> before closing
+    ({% for r in mandatory_reasons %}{{ "substantial-interest test" if r == "substantial_interest" else "critical-technology test" }}{% if not loop.last %} and {% endif %}{% endfor %}).
+    Failure to file carries civil penalties up to the value of the transaction.
+    Declaration assessment period: {{ declaration_days }} days.</p>
+  {% elif s.outcome == "COVERED_VOLUNTARY" %}
+  <p>CFIUS has jurisdiction
+    ({{ "control transaction" if s.covered_basis == "control" else "covered investment" }}),
+    but no filing is mandatory. A voluntary filing earns safe harbor —
+    without one, CFIUS can review (and unwind) the deal indefinitely.
+    Notice review: {{ review_days }} days, plus up to
+    {{ investigation_days }} days of investigation if opened.</p>
+  {% else %}
+  <p>This transaction is not covered — CFIUS has no jurisdiction as described.
+    No filing is available or required.</p>
+  {% endif %}
+</div>
+
+{% if tid_categories %}
+<p><strong>TID US business:</strong>
+  {% for c in tid_categories %}<span class="tag">{{ c }}</span>{% endfor %}
+</p>
+{% endif %}
+{% if s.excepted_investor %}
+<p><strong>Excepted investor</strong> (simplified country-of-origin test — full
+  § 800.219 criteria require counsel).</p>
+{% endif %}
+
+{% if risk_score %}
+<h2>National security risk assessment</h2>
+<p class="muted">Deterministic scoring — same facts, same score, no AI involved.
+  Threat / Vulnerability / Consequence weights are in
+  <code>config.py</code> (all marked VERIFY).</p>
+<div class="risk-scorecard">
+  <div class="risk-total risk-{{ risk_score.tier | lower }}">
+    <span class="risk-number">{{ risk_score.total }}</span><span class="risk-denom">/100</span>
+    <span class="risk-tier">{{ risk_score.tier }}</span>
+  </div>
+  <div class="risk-dims">
+    <span><strong>Threat</strong> {{ risk_score.threat }}</span>
+    <span><strong>Vulnerability</strong> {{ risk_score.vulnerability }}</span>
+    <span><strong>Consequence</strong> {{ risk_score.consequence }}</span>
+  </div>
+  {% if risk_score.factors %}
+  <table class="data-table" style="margin-top:0.6rem">
+    <thead><tr><th>Dimension</th><th>Factor</th><th style="text-align:right">Points</th></tr></thead>
+    <tbody>
+      {% for f in risk_score.factors %}
+      <tr>
+        <td><span class="tag tag-{{ f.dimension }}">{{ f.dimension | capitalize }}</span></td>
+        <td>{{ f.name }}</td>
+        <td style="text-align:right;font-family:system-ui,sans-serif">+{{ f.points }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No risk factors identified for this transaction.</p>
+  {% endif %}
+</div>
+{% endif %}
+
+<h2>OFAC SDN screening</h2>
+{% if ofac_error %}
+<div class="notice-error">OFAC screening failed — SDN list may be temporarily unavailable. Try again later.</div>
+{% endif %}
+{% if s.ofac_checked_at %}
+  {% if ofac_hits %}
+  <div class="notice-error">
+    <strong>{{ ofac_hits|length }} candidate match(es) found</strong> for
+    <em>{{ s.acquirer_name }}</em>. Human verification required before any
+    compliance action — name matching cannot confirm legal identity.
+  </div>
+  <table class="data-table">
+    <thead><tr><th>Submitted name</th><th>SDN name</th><th>Score</th><th>Program</th><th>Type</th></tr></thead>
+    <tbody>
+      {% for h in ofac_hits %}
+      <tr>
+        <td>{{ h.entity_name }}</td>
+        <td>{{ h.sdn_name }}</td>
+        <td>{{ h.score }}</td>
+        <td>{{ h.sdn_program or "—" }}</td>
+        <td>{{ h.sdn_type }}</td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <div class="notice-ok">
+    No candidate SDN matches found for <em>{{ s.acquirer_name }}</em>.
+  </div>
+  {% endif %}
+  <p class="muted">Screened {{ s.ofac_checked_at.strftime("%Y-%m-%d %H:%M UTC") }}.
+    <form method="post" action="/cfius/screening/{{ s.id }}/ofac-screen" style="display:inline">
+      <button type="submit" class="button-secondary" style="font-size:0.85rem;padding:0.25rem 0.8rem">Re-screen</button>
+    </form>
+  </p>
+{% else %}
+<p class="muted">OFAC SDN screening not yet run for this acquirer. The first
+  run downloads the OFAC list (~2 MB) — takes a few seconds.</p>
+<form method="post" action="/cfius/screening/{{ s.id }}/ofac-screen">
+  <button type="submit" class="button-primary">Screen against OFAC SDN list</button>
+</form>
+{% endif %}
+
+<h2>How this determination was reached</h2>
+<p class="muted">Every step below is deterministic — same facts, same answer,
+  same citation. No AI is involved in the legal tests.</p>
+
+<ol class="findings">
+  {% for f in findings %}
+  <li class="finding">
+    <p class="finding-question">{{ f.question }}</p>
+    <p class="finding-answer">{{ f.answer }}</p>
+    <p class="finding-determination">{{ f.determination }}</p>
+    <p class="finding-citation">{{ f.citation }}</p>
+  </li>
+  {% endfor %}
+</ol>
+
+{% if s.us_business_description %}
+<h2>Business description on record</h2>
+<p>{{ s.us_business_description }}</p>
+{% endif %}
+
+{% if s.intake_description %}
+<h2>Original deal description (AI intake)</h2>
+<p class="muted" style="white-space:pre-wrap">{{ s.intake_description }}</p>
+{% endif %}
+
+<h2>Screening memorandum</h2>
+{% if memo_error %}
+<div class="notice-error">Could not generate memo — Claude API unavailable or not configured.</div>
+{% endif %}
+
+{% if s.memo_text %}
+<div class="memo-section">{{ s.memo_text }}</div>
+<div class="memo-actions">
+  <a href="/cfius/screening/{{ s.id }}/memo.pdf" class="button-primary">Download PDF</a>
+  <form method="post" action="/cfius/screening/{{ s.id }}/memo" style="display:inline">
+    <button type="submit" class="button-secondary">Regenerate memo</button>
+  </form>
+</div>
+{% else %}
+<p class="muted">
+  The screening memorandum is a Claude-drafted narrative explaining which tests
+  fired and why. It does not affect the legal determination above.
+</p>
+<form method="post" action="/cfius/screening/{{ s.id }}/memo">
+  <button type="submit" class="button-primary">Generate memo</button>
+</form>
+{% endif %}
+{% endblock %}

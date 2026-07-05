@@ -1,0 +1,17 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <title>{% block title %}Arbor{% endblock %}</title>
+  <link rel="stylesheet" href="/static/shared/css/app.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="/" class="site-logo">Arbor</a>
+    <span class="site-tagline">Supply chain, foreign investment &amp; financial resilience intelligence</span>
+  </header>
+  <div class="main-content">
+    {% block content %}{% endblock %}
+  </div>
+</body>
+</html>

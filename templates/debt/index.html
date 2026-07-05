@@ -1,0 +1,54 @@
+{% extends "base.html" %}
+{% block title %}Debt Exposure Monitor — Arbor{% endblock %}
+{% block content %}
+<p class="breadcrumb"><a href="/">&larr; Arbor</a></p>
+<h1>Debt Exposure Monitor</h1>
+<p class="muted">
+  Tracks lender identity behind a defense supplier's credit facilities and
+  bond issuances -- screens every disclosed lender against OFAC SDN, BIS
+  export-control lists, and a curated list of foreign state-owned/
+  state-controlled financial institutions. All matches are candidates
+  requiring human verification, never confirmed findings.
+</p>
+
+<div class="gen-form">
+  <h2>Screen a real, EDGAR-registered company</h2>
+  <form action="/debt/screen" method="post">
+    <label for="company_query">Company name or ticker</label>
+    <input type="text" id="company_query" name="company_query" placeholder="e.g. Lockheed Martin or LMT" required>
+    <button type="submit" class="button-primary">Screen</button>
+  </form>
+</div>
+
+{% if screen_error %}
+<div class="error-box">{{ screen_error }}</div>
+{% endif %}
+{% if candidates %}
+<table>
+  <tr><th>Ticker</th><th>Company</th></tr>
+  {% for c in candidates %}
+  <tr><td>{{ c.ticker }}</td><td>{{ c.name }}</td></tr>
+  {% endfor %}
+</table>
+{% endif %}
+
+<h2>Debt profiles on file</h2>
+{% if rows %}
+<table>
+  <tr><th>Company</th><th>Risk tier</th><th></th></tr>
+  {% for row in rows %}
+  <tr>
+    <td>{{ row.profile.company_name }}{% if row.profile.is_demo %} <span class="muted">(demo)</span>{% endif %}</td>
+    <td>
+      {% if row.risk %}
+      <span class="badge badge-{{ row.risk.tier|lower }}">{{ row.risk.tier }}</span>
+      {% endif %}
+    </td>
+    <td><a href="/debt/profile/{{ row.profile.id }}">View &rarr;</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p class="muted">No profiles yet.</p>
+{% endif %}
+{% endblock %}

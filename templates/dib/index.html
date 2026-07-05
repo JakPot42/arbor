@@ -1,0 +1,76 @@
+{% extends "dib/base.html" %}
+{% block content %}
+
+<div style="display:flex; gap:16px; align-items:flex-start; flex-wrap:wrap; margin-bottom:20px;">
+  <div style="flex:2; min-width:320px;" class="card">
+    <h2>Track a Defense Supplier</h2>
+    <p style="font-size:12px; color:#7f8c8d; margin-bottom:12px;">
+      Enter a company name to retrieve its SEC 10-K financial data, run a Monte Carlo
+      distress simulation, and screen for CFIUS-relevant ownership changes.
+      <br>Bridge tool: <strong>FriendShore</strong> flags your Tier-2 supplier as a critical
+      single point of failure — this tool tells you whether that supplier is also financially
+      distressed or has concerning ownership.
+    </p>
+    <form method="post" action="/dib/supplier/search" style="display:flex; gap:8px; flex-wrap:wrap;">
+      <input type="text" name="company_name" placeholder="Company name (e.g., Arrowhead Defense Systems)" style="flex:1; min-width:240px;" required>
+      <select name="dib_category">
+        <option>Prime Contractor</option>
+        <option selected>Tier 1 Subcontractor</option>
+        <option>Tier 2 Subcontractor</option>
+        <option>Critical Sole-Source Supplier</option>
+        <option>Foreign-Owned Supplier</option>
+      </select>
+      <button type="submit" class="btn btn-primary">Analyze →</button>
+    </form>
+  </div>
+  <div style="flex:1; min-width:200px;" class="card">
+    <h2>Policy Context</h2>
+    <p style="font-size:12px; color:#555; line-height:1.6;">
+      The DoD Industrial Base Policy office tracks DIB financial health and foreign ownership
+      in its Annual Industrial Capabilities Report to Congress. This tool automates that
+      analysis using public SEC filings.
+    </p>
+  </div>
+</div>
+
+<div class="card">
+  <h2>Tracked Suppliers</h2>
+  {% if supplier_rows %}
+  <table>
+    <thead>
+      <tr>
+        <th>Supplier</th>
+        <th>DIB Category</th>
+        <th>Sector</th>
+        <th>Filing Period</th>
+        <th>Financial Risk</th>
+        <th>Ownership Risk</th>
+        <th>Combined Risk</th>
+        <th>CFIUS Flags</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for row in supplier_rows %}
+      {% set s = row.supplier %}
+      {% set a = row.assessment %}
+      <tr>
+        <td><a href="/dib/supplier/{{ s.id }}"><strong>{{ s.name }}</strong></a>{% if s.ticker %} <span style="color:#7f8c8d;">({{ s.ticker }})</span>{% endif %}</td>
+        <td>{{ s.dib_category }}</td>
+        <td>{{ s.sector }}</td>
+        <td>{% if a %}{{ a.filing_period or "—" }}{% else %}Not assessed{% endif %}</td>
+        <td>{% if a and a.financial_risk_level %}<span class="badge badge-{{ a.financial_risk_level | lower }}">{{ a.financial_risk_level }}</span>{% else %}—{% endif %}</td>
+        <td>{% if a and a.ownership_risk_level %}<span class="badge badge-{{ a.ownership_risk_level | lower }}">{{ a.ownership_risk_level }}</span>{% else %}—{% endif %}</td>
+        <td>{% if a and a.combined_risk_level %}<span class="badge badge-{{ a.combined_risk_level | lower }}" style="background:{{ row.risk_color }};">{{ a.combined_risk_level }}</span>{% else %}—{% endif %}</td>
+        <td>{% if a %}{{ a.ownership_risk_score and a.ownership_risk_score > 0 and "⚠ YES" or "No" }}{% else %}—{% endif %}</td>
+        <td><a href="/dib/supplier/{{ s.id }}" class="btn btn-outline" style="padding:4px 10px; font-size:12px;">View →</a></td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#7f8c8d;">No suppliers tracked yet.</p>
+  {% endif %}
+</div>
+
+{% endblock %}

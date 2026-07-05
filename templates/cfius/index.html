@@ -1,0 +1,44 @@
+{% extends "cfius/base.html" %}
+{% block content %}
+<section class="hero">
+  <h1>Screen a transaction for CFIUS jurisdiction</h1>
+  <p>
+    Enter the facts of a proposed acquisition, investment, or joint venture
+    involving a foreign person. The screener walks the jurisdictional tests of
+    31&nbsp;CFR&nbsp;Part&nbsp;800 — covered control transaction, covered
+    investment, excepted investor, and both mandatory-declaration prongs — and
+    shows its work at every step, with the regulation cited.
+  </p>
+  <a class="button-primary" href="/cfius/screen">Start a screening</a>
+</section>
+
+<section>
+  <h2>Recent screenings</h2>
+  {% if screenings %}
+  <table class="data-table">
+    <thead>
+      <tr>
+        <th>US business</th>
+        <th>Foreign acquirer</th>
+        <th>Country</th>
+        <th>Determination</th>
+        <th></th>
+      </tr>
+    </thead>
+    <tbody>
+      {% for s in screenings %}
+      <tr>
+        <td>{{ s.us_business_name }}{% if s.is_demo %} <span class="tag tag-demo">demo</span>{% endif %}</td>
+        <td>{{ s.acquirer_name }}</td>
+        <td>{{ s.acquirer_country }}</td>
+        <td><span class="outcome outcome-{{ s.outcome | lower }}">{{ outcome_labels[s.outcome] }}</span></td>
+        <td><a href="/cfius/screening/{{ s.id }}">View</a></td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p class="muted">No screenings yet.</p>
+  {% endif %}
+</section>
+{% endblock %}

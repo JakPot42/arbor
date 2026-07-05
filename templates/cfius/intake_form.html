@@ -1,0 +1,41 @@
+{% extends "cfius/base.html" %}
+{% block content %}
+<h1>AI deal intake</h1>
+<p class="muted">
+  Paste a plain-English description of the proposed transaction. Claude will
+  extract the structured facts and show them to you for review — you confirm
+  or correct before the screening runs. The legal tests always run on confirmed
+  facts, never on raw text.
+</p>
+
+{% if error %}
+<div class="notice-error">
+  <strong>Claude could not parse the description:</strong> {{ error }}
+  <br>Check your description and try again, or use the
+  <a href="/cfius/screen">structured form</a> directly.
+</div>
+{% endif %}
+
+<form method="post" action="/cfius/intake" class="screen-form">
+  <fieldset>
+    <legend>Deal description</legend>
+    <label>Describe the proposed transaction
+      <textarea name="description" rows="10" required
+        placeholder="Example: Helix Genomics Inc., a San Diego genomics company with 2 million customers' genetic data, is being acquired by Al Noor Capital, a UAE sovereign wealth fund, for a 28% stake. Al Noor will receive a board observer seat."
+      >{% if description %}{{ description }}{% endif %}</textarea>
+    </label>
+    <p class="field-help">
+      Include: names of both companies, acquirer's home country, percentage being
+      acquired, any board rights, whether the US business uses export-controlled
+      technology, critical infrastructure, or sensitive personal data. The more
+      detail you provide, the better Claude's parse will be.
+    </p>
+  </fieldset>
+  <button type="submit" class="button-primary">Parse with Claude →</button>
+</form>
+
+<p class="muted" style="margin-top:1.5rem">
+  Prefer to enter facts directly?
+  <a href="/cfius/screen">Use the structured form</a> — no Claude involved.
+</p>
+{% endblock %}

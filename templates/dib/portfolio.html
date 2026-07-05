@@ -1,0 +1,147 @@
+{% extends "dib/base.html" %}
+{% block content %}
+
+<div style="margin-bottom:16px;">
+  <h2 style="border:none; padding:0; font-size:20px;">Portfolio Risk View</h2>
+  <div style="font-size:12px; color:#7f8c8d;">Aggregate exposure across all tracked DIB suppliers</div>
+</div>
+
+<!-- Aggregate stats -->
+<div class="risk-scorecard" style="margin-bottom:16px;">
+  <div class="risk-box" style="background:#2c3e50;">
+    <div class="rlabel">Suppliers Tracked</div>
+    <div class="rscore">{{ total }}</div>
+    <div class="rlevel">{{ assessed }} assessed</div>
+  </div>
+  <div class="risk-box" style="background:{% if high_critical > 0 %}#e74c3c{% else %}#2ecc71{% endif %};">
+    <div class="rlabel">HIGH / CRITICAL</div>
+    <div class="rscore">{{ high_critical }}</div>
+    <div class="rlevel">of {{ assessed }} assessed</div>
+  </div>
+  <div class="risk-box" style="background:{% if cfius_total > 0 %}#e74c3c{% else %}#2ecc71{% endif %};">
+    <div class="rlabel">CFIUS Flags</div>
+    <div class="rscore">{{ cfius_total }}</div>
+    <div class="rlevel">ownership records</div>
+  </div>
+  <div class="risk-box" style="background:{% if earnings_total > 0 %}#2980b9{% else %}#95a5a6{% endif %};">
+    <div class="rlabel">Earnings Signals</div>
+    <div class="rscore">{{ earnings_total }}</div>
+    <div class="rlevel">suppliers analyzed</div>
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+<!-- Portfolio brief -->
+{% if brief %}
+<div class="card" style="border-left:4px solid #2980b9;">
+  <h2>Portfolio Intelligence Brief</h2>
+  <div style="font-size:13px; line-height:1.8; color:#2c3e50; white-space:pre-line;">{{ brief }}</div>
+</div>
+{% endif %}
+
+<!-- Generate brief form -->
+{% if not brief %}
+<div class="card">
+  <h2>Generate Portfolio Brief</h2>
+  <p style="font-size:12px; color:#7f8c8d; margin-bottom:12px;">
+    Claude Haiku synthesizes the financial risk scores, ownership flags, and earnings call signals
+    across all tracked suppliers into a single portfolio-level brief for program managers
+    and contracting officers.
+  </p>
+  <form method="post" action="/dib/portfolio/brief">
+    <button type="submit" class="btn btn-primary">▶ Generate Portfolio Brief</button>
+  </form>
+</div>
+{% else %}
+<div style="margin-bottom:16px;">
+  <form method="post" action="/dib/portfolio/brief">
+    <button type="submit" class="btn btn-outline">↺ Regenerate Brief</button>
+  </form>
+</div>
+{% endif %}
+
+<!-- Risk table -->
+<div class="card">
+  <h2>Supplier Risk Table</h2>
+  {% if rows %}
+  <table>
+    <thead>
+      <tr>
+        <th>Supplier</th>
+        <th>Category</th>
+        <th>Financial Risk</th>
+        <th>Ownership Risk</th>
+        <th>Combined Risk</th>
+        <th>P(Distress 3yr)</th>
+        <th>CFIUS</th>
+        <th>Earnings Signals</th>
+      </tr>
+    </thead>
+    <tbody>
+    {% for r in rows %}
+      {% set s = r.supplier %}
+      {% set a = r.assessment %}
+      <tr>
+        <td><a href="/dib/supplier/{{ s.id }}"><strong>{{ s.name }}</strong></a></td>
+        <td style="font-size:12px;">{{ s.dib_category }}</td>
+        <td>
+          {% if a and a.financial_risk_level %}
+          <span class="badge badge-{{ a.financial_risk_level | lower }}">{{ a.financial_risk_level }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% if a and a.ownership_risk_level %}
+          <span class="badge badge-{{ a.ownership_risk_level | lower }}">{{ a.ownership_risk_level }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% if a and a.combined_risk_level %}
+          <span class="badge badge-{{ a.combined_risk_level | lower }}" style="background:{{ r.risk_color }};">{{ a.combined_risk_level }}</span>
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% if a and a.distress_prob_3yr is not none %}
+          {{ "%.0f"|format((a.distress_prob_3yr or 0) * 100) }}%
+          {% else %}—{% endif %}
+        </td>
+        <td>
+          {% if r.cfius_count > 0 %}
+          <strong style="color:#e74c3c;">⚠ {{ r.cfius_count }}</strong>
+          {% else %}No{% endif %}
+        </td>
+        <td>
+          {% if r.signal %}
+            {% if r.signal.export_control_flag or r.signal.supplier_diversion_flag %}
+            <span style="color:#e74c3c; font-size:12px;">⚠ Flagged</span>
+            {% else %}
+            <span style="color:#27ae60; font-size:12px;">✓ Clear</span>
+            {% endif %}
+            <a href="/dib/supplier/{{ s.id }}/earnings" style="font-size:11px; color:#7f8c8d; margin-left:6px;">view →</a>
+          {% else %}
+          <a href="/dib/supplier/{{ s.id }}/earnings" style="font-size:12px; color:#7f8c8d;">none yet</a>
+          {% endif %}
+        </td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#7f8c8d;">No suppliers tracked yet. <a href="/dib/">Add a supplier →</a></p>
+  {% endif %}
+</div>
+
+<!-- Limitations -->
+<div class="card limitations">
+  <h2>Limitations</h2>
+  <ul>
+    <li>Portfolio brief is generated by Claude Haiku from assessment data in this tool. It is not a professional financial opinion.</li>
+    <li>Risk scores are model-driven — verify against source SEC filings before acting.</li>
+    <li>Earnings signals reflect the most recent analyzed 8-K, not necessarily the most current filing.</li>
+    <li>Portfolio view covers only suppliers tracked in this tool. It does not represent your complete supply chain exposure.</li>
+  </ul>
+</div>
+
+{% endblock %}

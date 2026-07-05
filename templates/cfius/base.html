@@ -1,0 +1,33 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>{% block title %}{{ app_title }}{% endblock %}</title>
+  <link rel="stylesheet" href="/static/cfius/css/app.css">
+</head>
+<body>
+  <header class="site-header">
+    <a href="/cfius/" class="site-logo">CFIUS Screener</a>
+    <span class="site-tagline">Foreign Investment Transaction Screening</span>
+    <nav class="site-nav">
+      <a href="/cfius/">Dashboard</a>
+      <a href="/cfius/intake">AI Intake</a>
+      <a href="/cfius/screen">Structured Form</a>
+      <a href="/cfius/api/stats">Status</a>
+    </nav>
+  </header>
+
+  {% if demo_mode %}
+  <div class="demo-banner">{{ demo_banner }}</div>
+  {% endif %}
+
+  <main class="main-content">
+    {% block content %}{% endblock %}
+  </main>
+
+  <footer class="site-footer">
+    <p>{{ disclaimer }}</p>
+  </footer>
+</body>
+</html>

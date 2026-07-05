@@ -1,0 +1,100 @@
+{% extends "base.html" %}
+{% block title %}{{ brief.company_name }} — Pre-Acquisition Brief{% endblock %}
+{% block content %}
+<p class="breadcrumb"><a href="/brief/">&larr; Pre-Acquisition Brief Generator</a></p>
+
+<div class="company-header">
+  <h1>{{ brief.company_name }}{% if brief.ticker %} <span class="muted">({{ brief.ticker }})</span>{% endif %}</h1>
+  <div class="meta">
+    Prepared {{ brief.prepared_date }} &middot;
+    Overall risk: <span class="badge badge-{{ brief.overall_risk_tier|lower }}">{{ brief.overall_risk_tier }}</span>
+  </div>
+</div>
+
+<div class="detail-section">
+  <h2>Executive Summary</h2>
+  <p>{{ brief.executive_summary }}</p>
+</div>
+
+<div class="card-grid">
+  <div class="tool-card">
+    <h3>IP Portfolio</h3>
+    <div class="card-row"><span class="label">Strength</span><span class="badge badge-{{ ip.strength_tier|lower }}">{{ ip.strength_tier }}</span></div>
+    <div class="card-row"><span class="label">Total patents</span><span>{{ ip.total_patents }}</span></div>
+    <div class="card-row"><span class="label">Recent velocity</span><span>{{ ip.patent_velocity }}/yr ({{ ip.velocity_change_pct }}%)</span></div>
+    <p class="muted">{{ ip.top_domains|join(", ") }}</p>
+  </div>
+
+  <div class="tool-card">
+    <h3>Litigation</h3>
+    <div class="card-row"><span class="label">Risk tier</span><span class="badge badge-{{ litigation.risk_tier|lower }}">{{ litigation.risk_tier }}</span></div>
+    <div class="card-row"><span class="label">Total cases</span><span>{{ litigation.total_cases }}</span></div>
+    <div class="card-row"><span class="label">Active</span><span>{{ litigation.active_cases }}</span></div>
+    <div class="card-row"><span class="label">IP disputes</span><span>{{ litigation.ip_disputes }}</span></div>
+  </div>
+
+  <div class="tool-card">
+    <h3>Regulatory Exposure</h3>
+    <div class="card-row"><span class="label">Exposure tier</span><span class="badge badge-{{ regulatory.exposure_tier|lower }}">{{ regulatory.exposure_tier }}</span></div>
+    <div class="card-row"><span class="label">Material weakness</span><span>{{ regulatory.material_weakness }}</span></div>
+    <div class="card-row"><span class="label">Going concern</span><span>{{ regulatory.going_concern }}</span></div>
+    <div class="card-row"><span class="label">Export control mentions</span><span>{{ regulatory.export_control_mentions }}</span></div>
+  </div>
+
+  <div class="tool-card">
+    <h3>Contract Dependency</h3>
+    <div class="card-row"><span class="label">Dependency tier</span><span class="badge badge-{{ contract.dependency_tier|lower }}">{{ contract.dependency_tier }}</span></div>
+    <div class="card-row"><span class="label">Total awards</span><span>{{ contract.total_awards }}</span></div>
+    <div class="card-row"><span class="label">Total value</span><span>${{ "{:,.0f}".format(contract.total_value_usd) }}</span></div>
+    <div class="card-row"><span class="label">Primary agency</span><span>{{ contract.primary_agency }} ({{ "%.0f"|format(contract.primary_agency_pct * 100) }}%)</span></div>
+  </div>
+</div>
+
+{% if litigation.cases %}
+<div class="detail-section">
+  <h2>Litigation Cases</h2>
+  <table>
+    <tr><th>Case</th><th>Court</th><th>Status</th><th>Type</th></tr>
+    {% for c in litigation.cases %}
+    <tr>
+      <td>{{ c.case_name }}</td>
+      <td>{{ c.court }}</td>
+      <td>{{ c.status }}</td>
+      <td>{{ c.case_type }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+{% if regulatory.flags %}
+<div class="detail-section">
+  <h2>Regulatory Flags</h2>
+  <table>
+    <tr><th>Type</th><th>Severity</th><th>Period</th><th>Description</th></tr>
+    {% for f in regulatory.flags %}
+    <tr>
+      <td>{{ f.flag_type }}</td>
+      <td>{{ f.severity }}</td>
+      <td>{{ f.filing_period }}</td>
+      <td>{{ f.description }}</td>
+    </tr>
+    {% endfor %}
+  </table>
+</div>
+{% endif %}
+
+<div class="detail-section">
+  <h2>Recommended Diligence Questions</h2>
+  <ol>
+    {% for q in diligence_questions %}
+    <li>{{ q }}</li>
+    {% endfor %}
+  </ol>
+</div>
+
+<div class="detail-section">
+  <h2>Full Brief</h2>
+  <div class="prewrap">{{ brief.full_text }}</div>
+</div>
+{% endblock %}

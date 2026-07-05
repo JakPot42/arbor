@@ -1,0 +1,126 @@
+{% extends "cfius/base.html" %}
+{% block content %}
+<p class="breadcrumb"><a href="/cfius/intake">← Back to intake</a></p>
+<h1>Review Claude's proposed facts</h1>
+<p class="muted">
+  Claude parsed the deal description below into structured facts. Review every
+  field — correct anything that is wrong or uncertain. The screening engine runs
+  on what you submit here, not on the raw description.
+</p>
+
+<div class="notice-ai">
+  <strong>Claude's confidence notes:</strong> {{ proposed.confidence_notes }}
+</div>
+
+<form method="post" action="/cfius/intake/confirm" class="screen-form">
+  <input type="hidden" name="intake_description" value="{{ description }}">
+
+  <fieldset>
+    <legend>The US business (target)</legend>
+    <label>Company name
+      <input type="text" name="us_business_name" required maxlength="300"
+             value="{{ proposed.us_business_name }}">
+    </label>
+    <label>What does it do?
+      <textarea name="us_business_description" rows="3">{{ proposed.us_business_description }}</textarea>
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>The foreign acquirer</legend>
+    <label>Acquirer name
+      <input type="text" name="acquirer_name" required maxlength="300"
+             value="{{ proposed.acquirer_name }}">
+    </label>
+    <label>Home country (ultimate ownership, not letterbox jurisdiction)
+      <input type="text" name="acquirer_country" required maxlength="100"
+             value="{{ proposed.acquirer_country }}">
+    </label>
+    <label>Highest voting interest any single foreign government holds in the
+      acquirer (%) — a sovereign wealth fund is typically 100
+      <input type="number" name="foreign_govt_ownership_pct" min="0" max="100"
+             step="0.1" value="{{ proposed.foreign_govt_ownership_pct }}">
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>The transaction</legend>
+    <label>Voting interest acquired in the US business (%)
+      <input type="number" name="voting_interest_pct" min="0" max="100"
+             step="0.1" value="{{ proposed.voting_interest_pct }}" required>
+    </label>
+    <label class="check">
+      <input type="checkbox" name="contractual_control_rights"
+             {% if proposed.contractual_control_rights %}checked{% endif %}>
+      Acquirer obtains control rights beyond its share count (board majority,
+      veto over key business decisions, etc.)
+    </label>
+    <p class="field-help">Rights below matter even WITHOUT control — they can
+      make a minority investment a "covered investment" in a TID business:</p>
+    <label class="check">
+      <input type="checkbox" name="board_seat"
+             {% if proposed.board_seat %}checked{% endif %}>
+      Board seat
+    </label>
+    <label class="check">
+      <input type="checkbox" name="board_observer"
+             {% if proposed.board_observer %}checked{% endif %}>
+      Board observer seat
+    </label>
+    <label class="check">
+      <input type="checkbox" name="access_nonpublic_tech_info"
+             {% if proposed.access_nonpublic_tech_info %}checked{% endif %}>
+      Access to material non-public technical information
+    </label>
+    <label class="check">
+      <input type="checkbox" name="substantive_decision_role"
+             {% if proposed.substantive_decision_role %}checked{% endif %}>
+      Involvement in substantive decision-making
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>TID classification of the US business</legend>
+    <label class="check">
+      <input type="checkbox" name="produces_critical_tech"
+             {% if proposed.produces_critical_tech %}checked{% endif %}>
+      Produces, designs, tests, or develops <strong>critical technologies</strong>
+      (export-controlled items: ITAR, EAR CCL, etc.)
+    </label>
+    <label class="check indent">
+      <input type="checkbox" name="export_authorization_required"
+             {% if proposed.export_authorization_required %}checked{% endif %}>
+      …and exporting them to the acquirer's home country would require a US
+      export authorization
+    </label>
+    <label class="check">
+      <input type="checkbox" name="critical_infrastructure"
+             {% if proposed.critical_infrastructure %}checked{% endif %}>
+      Owns or operates <strong>critical infrastructure</strong>
+    </label>
+    <details class="field-help">
+      <summary>Examples of covered critical infrastructure</summary>
+      <ul>
+        {% for ex in infra_examples %}<li>{{ ex }}</li>{% endfor %}
+      </ul>
+    </details>
+    <label class="check">
+      <input type="checkbox" name="sensitive_personal_data"
+             {% if proposed.sensitive_personal_data %}checked{% endif %}>
+      Maintains or collects <strong>sensitive personal data</strong> on more than
+      1&nbsp;million individuals (or ANY genetic data)
+    </label>
+    <details class="field-help">
+      <summary>Sensitive-data categories</summary>
+      <ul>
+        {% for cat in data_categories %}<li>{{ cat }}</li>{% endfor %}
+      </ul>
+    </details>
+  </fieldset>
+
+  <div style="display:flex; gap:1rem; align-items:center; margin-top:0.5rem">
+    <button type="submit" class="button-primary">Confirm and run screening</button>
+    <a href="/cfius/intake" class="button-secondary">Cancel</a>
+  </div>
+</form>
+{% endblock %}

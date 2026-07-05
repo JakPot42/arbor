@@ -1,0 +1,203 @@
+{% extends "dib/base.html" %}
+{% block content %}
+
+<div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:16px; flex-wrap:wrap; gap:8px;">
+  <div>
+    <a href="/dib/" style="color:#7f8c8d; text-decoration:none; font-size:12px;">← All Suppliers</a>
+    <h2 style="margin-top:4px; border:none; padding:0; font-size:20px;">{{ supplier.name }}</h2>
+    <div style="font-size:12px; color:#7f8c8d;">
+      {{ supplier.dib_category }} · {{ supplier.sector }}
+      {% if supplier.ticker %} · Ticker: {{ supplier.ticker }}{% endif %}
+      {% if supplier.cik %} · CIK: {{ supplier.cik }}{% endif %}
+    </div>
+  </div>
+  <div style="display:flex; gap:8px; flex-wrap:wrap;">
+    {% if not (demo_mode and supplier.is_demo) %}
+    <form method="post" action="/dib/supplier/{{ supplier.id }}/analyze">
+      <button type="submit" class="btn btn-primary">▶ Run Analysis</button>
+    </form>
+    {% endif %}
+    <a href="/dib/supplier/{{ supplier.id }}/earnings" class="btn btn-outline">📋 Earnings Signals</a>
+    {% if assessment %}
+    <a href="/dib/supplier/{{ supplier.id }}/report.pdf" class="btn btn-success">⬇ Download PDF Report</a>
+    {% endif %}
+  </div>
+</div>
+
+{% if error %}
+<div class="alert alert-error">{{ error }}</div>
+{% endif %}
+
+{% if demo_mode and supplier.is_demo %}
+<div class="alert alert-info">
+  <strong>Demo data.</strong> Financial metrics and ownership records are pre-seeded from
+  a fictional SEC 10-K filing. Click <strong>⬇ Download PDF Report</strong> to see the full
+  Supplier Financial Resilience Report.
+</div>
+{% endif %}
+
+{% if assessment %}
+
+<!-- Risk Scorecard -->
+<div class="risk-scorecard">
+  <div class="risk-box" style="background:{{ fin_risk_color }};">
+    <div class="rlabel">Financial Risk</div>
+    <div class="rscore">{{ assessment.financial_risk_score }}</div>
+    <div class="rlevel">{{ assessment.financial_risk_level }}</div>
+  </div>
+  <div class="risk-box" style="background:{{ own_risk_color }};">
+    <div class="rlabel">Ownership Risk</div>
+    <div class="rscore">{{ assessment.ownership_risk_score }}</div>
+    <div class="rlevel">{{ assessment.ownership_risk_level }}</div>
+  </div>
+  <div class="risk-box" style="background:{{ risk_color }};">
+    <div class="rlabel">Combined Risk</div>
+    <div class="rscore">{{ assessment.combined_risk_score }}</div>
+    <div class="rlevel">{{ assessment.combined_risk_level }}</div>
+  </div>
+</div>
+
+<!-- Financial Metrics -->
+<div class="card">
+  <h2>Financial Metrics — {{ assessment.filing_period or "Latest Filing" }}</h2>
+  <div class="metric-grid">
+    <div class="metric-card">
+      <div class="label">Revenue</div>
+      <div class="value">${{ assessment.revenue_mm | int if assessment.revenue_mm else "N/A" }}M</div>
+      <div class="sub">Annual</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Total Debt</div>
+      <div class="value">${{ assessment.total_debt_mm | int if assessment.total_debt_mm else "N/A" }}M</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Cash</div>
+      <div class="value">${{ assessment.cash_mm | int if assessment.cash_mm else "N/A" }}M</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">EBITDA</div>
+      <div class="value">${{ assessment.ebitda_mm | int if assessment.ebitda_mm else "N/A" }}M</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Debt / EBITDA</div>
+      <div class="value" style="color: {% if assessment.debt_to_ebitda and assessment.debt_to_ebitda > 6 %}#e74c3c{% elif assessment.debt_to_ebitda and assessment.debt_to_ebitda > 4 %}#f39c12{% else %}#2ecc71{% endif %};">
+        {{ "%.1f"|format(assessment.debt_to_ebitda) ~ "x" if assessment.debt_to_ebitda else "N/A" }}
+      </div>
+      <div class="sub">&gt;6x = elevated risk</div>
+    </div>
+    <div class="metric-card">
+      <div class="label">Annual Debt Service</div>
+      <div class="value">${{ assessment.debt_service_annual_mm | int if assessment.debt_service_annual_mm else "N/A" }}M</div>
+    </div>
+  </div>
+
+  {% if assessment.near_term_maturity_mm %}
+  <div style="background:#fff3cd; border:1px solid #f39c12; border-radius:4px; padding:10px 14px; margin-bottom:12px; font-size:13px;">
+    ⚠ <strong>Near-Term Maturity:</strong> ${{ assessment.near_term_maturity_mm | int }}M due {{ assessment.near_term_maturity_date or "within 24 months" }}
+  </div>
+  {% endif %}
+
+  {% if assessment.going_concern_flag %}
+  <div style="background:#fde8e8; border:1px solid #e74c3c; border-radius:4px; padding:10px 14px; margin-bottom:12px; font-size:13px;">
+    🚨 <strong>Going Concern Language Detected</strong> — auditors have flagged substantial doubt about this company's ability to continue as a going concern.
+    {% if assessment.going_concern_quote %}<br><em style="color:#555;">"{{ assessment.going_concern_quote }}"</em>{% endif %}
+  </div>
+  {% endif %}
+
+  {% if assessment.covenant_summary %}
+  <h3>Covenant Summary</h3>
+  <p style="font-size:13px; line-height:1.6; color:#555;">{{ assessment.covenant_summary }}</p>
+  {% endif %}
+</div>
+
+<!-- Monte Carlo Results -->
+<div class="card">
+  <h2>Monte Carlo Financial Distress Probabilities</h2>
+  <p style="font-size:12px; color:#7f8c8d; margin-bottom:12px;">
+    P(EBITDA &lt; annual debt service) across 10,000 simulated GBM paths.
+    Illustrative model — not a professional financial opinion.
+  </p>
+  <table>
+    <thead>
+      <tr><th>Horizon</th><th>P(Distress)</th><th>Signal</th></tr>
+    </thead>
+    <tbody>
+      {% set probs = [
+        ("1 Year",  assessment.distress_prob_1yr),
+        ("2 Years", assessment.distress_prob_2yr),
+        ("3 Years", assessment.distress_prob_3yr),
+      ] %}
+      {% for label, p in probs %}
+      <tr>
+        <td>{{ label }}</td>
+        <td><strong>{{ "%.1f"|format((p or 0) * 100) }}%</strong></td>
+        <td>
+          {% if p and p >= 0.30 %}<span class="badge badge-critical">CRITICAL</span>
+          {% elif p and p >= 0.15 %}<span class="badge badge-high">HIGH</span>
+          {% elif p and p >= 0.05 %}<span class="badge badge-medium">MEDIUM</span>
+          {% else %}<span class="badge badge-low">LOW</span>{% endif %}
+        </td>
+      </tr>
+      {% endfor %}
+    </tbody>
+  </table>
+  {% if assessment.claude_summary %}
+  <h3>Analysis Summary</h3>
+  <p style="font-size:13px; line-height:1.6; color:#555; margin-top:8px;">{{ assessment.claude_summary }}</p>
+  {% endif %}
+</div>
+
+<!-- Ownership -->
+<div class="card">
+  <h2>Institutional Ownership — Q1 2026</h2>
+  <p style="font-size:12px; color:#7f8c8d; margin-bottom:12px;">
+    13F data (institutional holders ≥$100M AUM). CFIUS-flagged entries highlighted.
+    Ownership Risk Score: <strong>{{ assessment.ownership_risk_score }}/100</strong>
+    (<span class="badge badge-{{ assessment.ownership_risk_level | lower }}">{{ assessment.ownership_risk_level }}</span>)
+  </p>
+  {% if owners %}
+  <table>
+    <thead>
+      <tr><th>Owner</th><th>% Held</th><th>Country</th><th>Type</th><th>CFIUS Flag</th><th>Notes</th></tr>
+    </thead>
+    <tbody>
+    {% for o in owners %}
+      <tr class="{{ 'flag-row' if o.cfius_flag else '' }}">
+        <td>{{ o.owner_name }}</td>
+        <td>{{ "%.1f"|format(o.pct_owned or 0) }}%</td>
+        <td>{{ o.country or "—" }}</td>
+        <td>{{ o.owner_type }}</td>
+        <td>{% if o.cfius_flag %}<strong style="color:#e74c3c;">⚠ YES</strong>{% else %}No{% endif %}</td>
+        <td style="font-size:12px; color:#555;">{{ o.flag_reason or "—" }}</td>
+      </tr>
+    {% endfor %}
+    </tbody>
+  </table>
+  {% else %}
+  <p style="color:#7f8c8d; font-size:13px;">No ownership data available.</p>
+  {% endif %}
+</div>
+
+<!-- Honest limitations -->
+<div class="card limitations">
+  <h2>Limitations</h2>
+  <ul>
+    <li>Financial metrics extracted by Claude Haiku from SEC filings. Always verify against the source filing before acting.</li>
+    <li>Monte Carlo uses simplified GBM — does not model covenant triggers, refinancing, asset disposals, or macro shocks.</li>
+    <li>13F data covers institutional holders ≥$100M only; significant ownership by smaller funds or individuals will not appear.</li>
+    <li>CFIUS and ownership flags are for research use only, not legal advice or a CFIUS determination.</li>
+    <li>This tool does not constitute a professional financial opinion or valuation.</li>
+  </ul>
+</div>
+
+{% else %}
+<div class="card">
+  <p style="color:#7f8c8d;">No assessment found for this supplier.
+  {% if not (demo_mode and supplier.is_demo) %}
+  Click <strong>▶ Run Analysis</strong> to analyze this supplier.
+  {% endif %}
+  </p>
+</div>
+{% endif %}
+
+{% endblock %}

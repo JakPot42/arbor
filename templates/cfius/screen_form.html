@@ -1,0 +1,88 @@
+{% extends "cfius/base.html" %}
+{% block content %}
+<h1>New screening — structured form</h1>
+<p class="muted">
+  Enter the facts directly below. If you have a deal description in plain
+  English, use <a href="/cfius/intake">AI Intake</a> to have Claude propose
+  the answers for your review before the screening runs.
+  Either way, the legal tests always run on confirmed structured facts.
+</p>
+
+<form method="post" action="/cfius/screen" class="screen-form">
+  <fieldset>
+    <legend>The US business (target)</legend>
+    <label>Company name
+      <input type="text" name="us_business_name" required maxlength="300">
+    </label>
+    <label>What does it do? (plain description — stored for the record)
+      <textarea name="us_business_description" rows="3"></textarea>
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>The foreign acquirer</legend>
+    <label>Acquirer name
+      <input type="text" name="acquirer_name" required maxlength="300">
+    </label>
+    <label>Home country (ultimate ownership, not the letterbox jurisdiction)
+      <input type="text" name="acquirer_country" required maxlength="100"
+             placeholder="e.g. China, Canada, United Arab Emirates">
+    </label>
+    <label>Highest voting interest any single foreign government holds in the
+      acquirer (%) — a sovereign wealth fund is typically 100
+      <input type="number" name="foreign_govt_ownership_pct" min="0" max="100"
+             step="0.1" value="0">
+    </label>
+  </fieldset>
+
+  <fieldset>
+    <legend>The transaction</legend>
+    <label>Voting interest acquired in the US business (%)
+      <input type="number" name="voting_interest_pct" min="0" max="100"
+             step="0.1" value="0" required>
+    </label>
+    <label class="check"><input type="checkbox" name="contractual_control_rights">
+      Acquirer obtains control rights beyond its share count (board majority,
+      veto over key business decisions, etc.)</label>
+    <p class="field-help">Rights below matter even WITHOUT control — they can
+      make a minority investment a "covered investment" in a TID business:</p>
+    <label class="check"><input type="checkbox" name="board_seat">
+      Board seat</label>
+    <label class="check"><input type="checkbox" name="board_observer">
+      Board observer seat</label>
+    <label class="check"><input type="checkbox" name="access_nonpublic_tech_info">
+      Access to material non-public technical information</label>
+    <label class="check"><input type="checkbox" name="substantive_decision_role">
+      Involvement in substantive decision-making</label>
+  </fieldset>
+
+  <fieldset>
+    <legend>TID classification of the US business</legend>
+    <label class="check"><input type="checkbox" name="produces_critical_tech">
+      Produces, designs, tests, or develops <strong>critical technologies</strong>
+      (export-controlled items: ITAR, EAR CCL, etc.)</label>
+    <label class="check indent"><input type="checkbox" name="export_authorization_required">
+      …and exporting them to the acquirer's home country would require a US
+      export authorization</label>
+    <label class="check"><input type="checkbox" name="critical_infrastructure">
+      Owns or operates <strong>critical infrastructure</strong></label>
+    <details class="field-help">
+      <summary>Examples of covered critical infrastructure</summary>
+      <ul>
+        {% for ex in infra_examples %}<li>{{ ex }}</li>{% endfor %}
+      </ul>
+    </details>
+    <label class="check"><input type="checkbox" name="sensitive_personal_data">
+      Maintains or collects <strong>sensitive personal data</strong> on more than
+      1&nbsp;million individuals (or ANY genetic data)</label>
+    <details class="field-help">
+      <summary>Sensitive-data categories</summary>
+      <ul>
+        {% for cat in data_categories %}<li>{{ cat }}</li>{% endfor %}
+      </ul>
+    </details>
+  </fieldset>
+
+  <button type="submit" class="button-primary">Run screening</button>
+</form>
+{% endblock %}

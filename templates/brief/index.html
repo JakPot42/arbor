@@ -1,0 +1,47 @@
+{% extends "base.html" %}
+{% block title %}Pre-Acquisition Brief Generator — Arbor{% endblock %}
+{% block content %}
+<p class="breadcrumb"><a href="/">&larr; Arbor</a></p>
+<h1>Pre-Acquisition Brief Generator</h1>
+<p class="muted">
+  Structured M&amp;A intelligence brief: IP portfolio strength, litigation
+  history, regulatory exposure, and government contract dependency, from
+  USPTO, CourtListener, SEC EDGAR, and USASpending.gov.
+</p>
+
+<div class="gen-form">
+  <h2>Generate a brief</h2>
+  <form action="/brief/generate" method="post">
+    <div class="field-row">
+      <div>
+        <label for="company">Company name</label>
+        <input type="text" id="company" name="company" placeholder="e.g. Parsons Corporation" required>
+      </div>
+      <div>
+        <label for="ticker">Ticker (optional)</label>
+        <input type="text" id="ticker" name="ticker" placeholder="e.g. PSN">
+      </div>
+    </div>
+    <label><input type="checkbox" name="demo" value="true" checked> Use demo data (uncheck for live APIs -- slower, and the EDGAR regulatory-exposure signal has a known live-mode limitation, see README)</label>
+    <div style="margin-top:0.75rem;">
+      <button type="submit" class="button-primary">Generate brief</button>
+    </div>
+  </form>
+</div>
+
+<h2>Briefs on file</h2>
+{% if briefs %}
+<table>
+  <tr><th>Company</th><th>Overall risk</th><th></th></tr>
+  {% for b in briefs %}
+  <tr>
+    <td>{{ b.company_name }}{% if b.ticker %} ({{ b.ticker }}){% endif %}{% if b.is_demo %} <span class="muted">(demo)</span>{% endif %}</td>
+    <td><span class="badge badge-{{ b.overall_risk_tier|lower }}">{{ b.overall_risk_tier }}</span></td>
+    <td><a href="/brief/{{ b.id }}">View &rarr;</a></td>
+  </tr>
+  {% endfor %}
+</table>
+{% else %}
+<p class="muted">No briefs yet.</p>
+{% endif %}
+{% endblock %}

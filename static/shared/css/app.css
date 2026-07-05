@@ -1,0 +1,134 @@
+/* Arbor — shared shell CSS for the entity-centric home/company views.
+Deliberately its own small stylesheet rather than importing one tool's
+CSS wholesale (e.g. CFIUS's serif/Georgia identity) -- this is Arbor's
+own "home" identity, not any one merged tool's. */
+
+:root {
+  --ink: #0f172a;
+  --slate: #475569;
+  --bg: #f4f6f9;
+  --card: #ffffff;
+  --border: #d7dee8;
+  --brand: #1d3a5f;
+  --red: #b91c1c;
+  --red-bg: #fee2e2;
+  --amber: #92600a;
+  --amber-bg: #fef3c7;
+  --blue: #1d4ed8;
+  --blue-bg: #dbeafe;
+  --green: #166534;
+  --green-bg: #dcfce7;
+  --gray: #64748b;
+  --gray-bg: #e2e8f0;
+}
+
+* { box-sizing: border-box; }
+
+body {
+  margin: 0;
+  font-family: system-ui, -apple-system, "Segoe UI", sans-serif;
+  background: var(--bg);
+  color: var(--ink);
+  line-height: 1.55;
+}
+
+.site-header {
+  background: var(--brand);
+  color: #fff;
+  padding: 0.9rem 2rem;
+  display: flex;
+  align-items: baseline;
+  gap: 1rem;
+  flex-wrap: wrap;
+}
+.site-logo { color: #fff; font-size: 1.35rem; font-weight: bold; text-decoration: none; }
+.site-tagline { color: #b9c8dc; font-size: 0.9rem; flex: 1; }
+
+.main-content { max-width: 900px; margin: 0 auto; padding: 1.75rem 2rem 3rem; }
+
+h1 { color: var(--brand); font-size: 1.6rem; margin-bottom: 0.4rem; }
+h2 { color: var(--brand); font-size: 1.1rem; margin-top: 0; }
+.muted { color: var(--slate); font-size: 0.92rem; }
+a { color: var(--brand); }
+
+.search-form { display: flex; gap: 0.5rem; margin: 1.25rem 0; }
+.search-form input[type="text"] {
+  flex: 1; padding: 0.6rem 0.8rem; border: 1px solid var(--border);
+  border-radius: 6px; font-size: 1rem;
+}
+.button-primary {
+  background: var(--brand); color: #fff; border: none; padding: 0.6rem 1.1rem;
+  border-radius: 6px; font-size: 0.95rem; cursor: pointer; text-decoration: none;
+  display: inline-block;
+}
+.button-primary:hover { opacity: 0.9; }
+
+.error-box {
+  background: var(--red-bg); color: var(--red); border: 1px solid #f3b8b8;
+  border-radius: 6px; padding: 0.7rem 1rem; margin: 1rem 0; font-size: 0.9rem;
+}
+
+table { width: 100%; border-collapse: collapse; margin: 0.75rem 0; }
+th, td { text-align: left; padding: 0.5rem 0.6rem; border-bottom: 1px solid var(--border); font-size: 0.92rem; }
+th { color: var(--slate); font-weight: 600; font-size: 0.82rem; text-transform: uppercase; letter-spacing: 0.02em; }
+
+.company-header {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 1.25rem 1.5rem; margin-bottom: 1.5rem;
+}
+.company-header .meta { color: var(--slate); font-size: 0.9rem; margin-top: 0.3rem; }
+.aliases { font-size: 0.85rem; color: var(--gray); margin-top: 0.4rem; }
+
+.card-grid {
+  display: grid; grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+  gap: 1rem; margin-top: 1rem;
+}
+.tool-card {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 1.1rem 1.25rem;
+}
+.tool-card h3 { margin: 0 0 0.5rem; font-size: 1rem; color: var(--brand); }
+.tool-card .status-empty { color: var(--gray); font-size: 0.9rem; font-style: italic; }
+.tool-card .card-row { display: flex; justify-content: space-between; margin: 0.3rem 0; font-size: 0.9rem; }
+.tool-card .card-row .label { color: var(--slate); }
+.tool-card .card-link { display: inline-block; margin-top: 0.75rem; font-size: 0.88rem; }
+
+.badge {
+  display: inline-block; padding: 0.15rem 0.55rem; border-radius: 4px;
+  font-size: 0.78rem; font-weight: 600; text-transform: uppercase; letter-spacing: 0.02em;
+}
+.badge-critical, .badge-high, .badge-minimal, .badge-high_dependency, .badge-red {
+  background: var(--red-bg); color: var(--red);
+}
+.badge-medium, .badge-moderate, .badge-weak, .badge-elevated, .badge-amber {
+  background: var(--amber-bg); color: var(--amber);
+}
+.badge-low, .badge-clean, .badge-none, .badge-strong, .badge-normal, .badge-clear,
+.badge-diversified, .badge-green {
+  background: var(--green-bg); color: var(--green);
+}
+.badge-blue { background: var(--blue-bg); color: var(--blue); }
+.badge-gray { background: var(--gray-bg); color: var(--gray); }
+
+.recent-list { list-style: none; padding: 0; margin: 0; }
+.recent-list li { padding: 0.5rem 0; border-bottom: 1px solid var(--border); }
+.recent-list li:last-child { border-bottom: none; }
+
+/* Detail pages (debt / brief) */
+.detail-section {
+  background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 1.1rem 1.5rem; margin-bottom: 1.25rem;
+}
+.detail-section h2 { margin-top: 0; }
+.prewrap { white-space: pre-wrap; font-family: Georgia, "Times New Roman", serif; line-height: 1.6; }
+.scorecard { display: flex; align-items: baseline; gap: 0.75rem; margin-bottom: 0.75rem; }
+.scorecard .score-number { font-size: 2rem; font-weight: bold; color: var(--brand); }
+.scorecard .score-denom { color: var(--slate); }
+
+.gen-form { background: var(--card); border: 1px solid var(--border); border-radius: 8px;
+  padding: 1.25rem 1.5rem; margin: 1.25rem 0; }
+.gen-form label { display: block; margin-bottom: 0.3rem; font-size: 0.88rem; color: var(--slate); }
+.gen-form input[type="text"] { width: 100%; padding: 0.5rem 0.7rem; border: 1px solid var(--border);
+  border-radius: 6px; margin-bottom: 0.75rem; font-size: 0.95rem; }
+.gen-form .field-row { display: flex; gap: 1rem; }
+.gen-form .field-row > div { flex: 1; }

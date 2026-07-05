@@ -1,0 +1,108 @@
+{% extends "base.html" %}
+{% block title %}{{ company.canonical_name }} — Arbor{% endblock %}
+{% block content %}
+<p class="breadcrumb"><a href="/">&larr; Search</a></p>
+
+<div class="company-header">
+  <h1>{{ company.canonical_name }}</h1>
+  <div class="meta">
+    {% if company.ticker %}Ticker: {{ company.ticker }} &middot; {% endif %}
+    {% if company.cik %}CIK: {{ company.cik }}{% else %}CIK: unknown{% endif %}
+  </div>
+  {% if company.aliases %}
+  <div class="aliases">Also known as: {{ company.aliases|join(", ") }}</div>
+  {% endif %}
+</div>
+
+<div class="card-grid">
+
+  <div class="tool-card">
+    <h3>GhostTrace — Ownership Trace</h3>
+    {% if latest_trace %}
+      <div class="card-row">
+        <span class="label">Risk level</span>
+        <span class="badge badge-{{ latest_trace.risk_level|lower }}">{{ latest_trace.risk_level }}</span>
+      </div>
+      <div class="card-row"><span class="label">Score</span><span>{{ latest_trace.risk_score }}/100</span></div>
+      {% if latest_trace.headline %}<p class="muted">{{ latest_trace.headline }}</p>{% endif %}
+      {% if trace_count > 1 %}<p class="muted">{{ trace_count }} traces on file.</p>{% endif %}
+      <a class="card-link" href="/ghosttrace/trace/{{ latest_trace.id }}">View full trace &rarr;</a>
+    {% else %}
+      <p class="status-empty">Not yet traced.</p>
+      <a class="card-link" href="/ghosttrace/">Start a trace &rarr;</a>
+    {% endif %}
+  </div>
+
+  <div class="tool-card">
+    <h3>CFIUS Screener — Jurisdiction Status</h3>
+    {% if latest_screening %}
+      <div class="card-row">
+        <span class="label">Outcome</span>
+        <span class="badge badge-{{ 'critical' if latest_screening.outcome == 'MANDATORY_DECLARATION' else ('medium' if latest_screening.outcome == 'COVERED_VOLUNTARY' else 'low') }}">
+          {{ latest_screening.outcome.replace("_", " ") }}
+        </span>
+      </div>
+      {% if screening_risk %}
+      <div class="card-row"><span class="label">National security risk</span><span class="badge badge-{{ screening_risk.tier|lower }}">{{ screening_risk.tier }}</span></div>
+      {% endif %}
+      {% if screening_count > 1 %}<p class="muted">{{ screening_count }} screenings on file.</p>{% endif %}
+      <a class="card-link" href="/cfius/screening/{{ latest_screening.id }}">View full screening &rarr;</a>
+    {% else %}
+      <p class="status-empty">Not yet screened.</p>
+      <a class="card-link" href="/cfius/screen">Start a screening &rarr;</a>
+    {% endif %}
+  </div>
+
+  <div class="tool-card">
+    <h3>DIB Monitor — Financial Resilience</h3>
+    {% if supplier and assessment %}
+      <div class="card-row">
+        <span class="label">Combined risk</span>
+        <span class="badge badge-{{ assessment.combined_risk_level|lower }}">{{ assessment.combined_risk_level }}</span>
+      </div>
+      <div class="card-row"><span class="label">Score</span><span>{{ assessment.combined_risk_score }}/100</span></div>
+      <a class="card-link" href="/dib/supplier/{{ supplier.id }}">View full assessment &rarr;</a>
+    {% elif supplier %}
+      <p class="status-empty">Tracked, but not yet assessed.</p>
+      <a class="card-link" href="/dib/supplier/{{ supplier.id }}">Run analysis &rarr;</a>
+    {% else %}
+      <p class="status-empty">Not yet monitored.</p>
+      <a class="card-link" href="/dib/">Start monitoring &rarr;</a>
+    {% endif %}
+  </div>
+
+  <div class="tool-card">
+    <h3>Debt Exposure Monitor — Lender Concentration</h3>
+    {% if latest_debt_profile %}
+      {% if latest_debt_risk %}
+      <div class="card-row">
+        <span class="label">Risk</span>
+        <span class="badge badge-{{ latest_debt_risk.tier|lower }}">{{ latest_debt_risk.tier }}</span>
+      </div>
+      <div class="card-row"><span class="label">Score</span><span>{{ latest_debt_risk.score }}/100</span></div>
+      {% endif %}
+      {% if debt_profile_count > 1 %}<p class="muted">{{ debt_profile_count }} profiles on file.</p>{% endif %}
+      <a class="card-link" href="/debt/profile/{{ latest_debt_profile.id }}">View full profile &rarr;</a>
+    {% else %}
+      <p class="status-empty">Not yet screened.</p>
+      <a class="card-link" href="/debt/">Screen this company &rarr;</a>
+    {% endif %}
+  </div>
+
+  <div class="tool-card">
+    <h3>Pre-Acquisition Brief — M&amp;A Intelligence</h3>
+    {% if latest_brief %}
+      <div class="card-row">
+        <span class="label">Overall risk</span>
+        <span class="badge badge-{{ latest_brief.overall_risk_tier|lower }}">{{ latest_brief.overall_risk_tier }}</span>
+      </div>
+      {% if brief_count > 1 %}<p class="muted">{{ brief_count }} briefs on file.</p>{% endif %}
+      <a class="card-link" href="/brief/{{ latest_brief.id }}">View full brief &rarr;</a>
+    {% else %}
+      <p class="status-empty">Not yet analyzed.</p>
+      <a class="card-link" href="/brief/">Generate a brief &rarr;</a>
+    {% endif %}
+  </div>
+
+</div>
+{% endblock %}
