@@ -1,10 +1,73 @@
 # Arbor — Claude Code context
 
+**SHIPPED — Phase 6, Cluster 1 of 6, live as of July 5, 2026.**
+`https://arbor-vpa1.onrender.com` — GitHub: `JakPot42/arbor`.
+
 Arbor merges GhostTrace, CFIUS Screener, DIB Monitor, Pre-Acquisition Brief
 Generator, and Debt Exposure Monitor into one FastAPI app with one shared
 `Company` entity every tool's records hang off of. First of six planned
 Phase 6 cluster mergers. Architecture proposal: see
 `C:\Users\JakPot\.claude\plans\wild-wibbling-wirth.md`.
+
+## Deployment (step 5 — shipped)
+
+Pushed to `JakPot42/arbor` (public), deployed to Render as
+`srv-d94vip7aqgkc73ef9s00` (`arbor-vpa1.onrender.com`), and verified live
+end-to-end before anything was decommissioned — same discipline as every
+other verification pass in this build. `ghosttrace-aose`, `cfius-screener`,
+and `dib-monitor`'s standalone Render services are now deleted;
+`JakPot42/ghosttrace`, `JakPot42/cfius-screener`, and `JakPot42/dib-monitor`
+GitHub repos are untouched and unarchived, exactly as required. The GitHub
+profile README (`JakPot42/JakPot42`) now notes the merge on all three rows
+with a link to Arbor, and Pre-Acquisition Brief and Debt Exposure Monitor
+(previously CLI-only, no row at all for the latter) both got real entries
+pointing to Arbor for the first time.
+
+**Render's Hobby tier hard-caps at 25 services (confirmed directly via a
+real 400 from the API, not assumed from memory) — this blocked deploying
+Arbor as a clean 26th service while verifying against all three originals
+still live.** Suspending a service to free the slot was tried first and
+does NOT work — Render still counts suspended services against the cap
+(confirmed by testing directly: the create call still 400'd after
+suspending DIB Monitor). The actual resolution, confirmed with the user
+first: delete DIB Monitor's Render service for real (not its GitHub repo)
+to free one slot, deploy Arbor into it, verify Arbor's DIB Monitor coverage
+specifically plus all other four tools over real HTTP before touching
+anything else, then delete the other two once fully confirmed. DIB
+Monitor's own live demo was offline for a few minutes before Arbor's
+replacement was verified — a real, accepted tradeoff of the 25-slot cap,
+not an oversight.
+
+**Two real deploy-time bugs found via the actual Render build logs (never
+guessed at):**
+1. `ModuleNotFoundError: No module named 'slowapi'` on first boot — root
+   `requirements.txt` had only ever listed the handful of packages step 1's
+   shared plumbing needed (`fastapi`, `uvicorn`, `jinja2`, `sqlalchemy`,
+   `httpx`, `anthropic`, `pytest`), never reconciled against everything
+   steps 2-4's ported engines actually import. Fixed by rebuilding the file
+   from a real grep of every top-level import across the whole codebase:
+   added `chromadb`, `matplotlib`, `networkx`, `numpy`, `rapidfuzz`,
+   `reportlab`, `requests`, `slowapi`, `python-multipart` (needed for every
+   router's `Form(...)` parameters even though nothing imports it directly),
+   and `pydantic` (a direct import in `jurisdiction_engine.py`, not just a
+   FastAPI transitive dependency).
+2. `RuntimeError: Directory '/opt/render/project/src/static/dib' does not
+   exist` on the second boot — DIB Monitor's original project never had a
+   static/ directory at all (its templates use inline styles, never a
+   stylesheet link); `static/dib/` locally was an empty, never-git-tracked
+   leftover (git doesn't track empty directories), so `main.py`'s
+   `app.mount("/static/dib", ...)` pointed at a path that simply wasn't in
+   the pushed repo. Removed the dead mount rather than adding a placeholder
+   file just to keep an unused directory alive.
+
+The second fix was verified with a targeted local smoke pass (DIB-related
+tests) before pushing again, not a full regression run — the full suite
+had already passed cleanly at the end of step 4, and neither fix touched
+logic the rest of the suite exercises. Both are then re-verified live,
+over real HTTP, after the successful deploy — including DIB Monitor's
+dashboard, supplier detail, PDF export, earnings, and portfolio routes
+specifically, since that tool's own standalone deployment was the one
+sacrificed to make room.
 
 ## Build status
 
@@ -376,10 +439,14 @@ ambiguous for no reason.
   `engines/brief_edgar_client.py`'s docstring, not fixed in step 4, since
   fixing the real extraction logic is separate, more invasive work than
   what this step's architecture review scoped.
-- The three decommissioned-deployment / profile-README-update steps from
-  the approved plan haven't happened — Arbor isn't deployed anywhere yet.
-  All five sources are now built and wired in; the build-sequence part of
-  the plan is complete.
+- **`ANTHROPIC_API_KEY` is not actually set on the live Render service**,
+  despite being told it was — checked directly via the Render API
+  (env-vars list shows only `DEMO_MODE` and `PYTHON_VERSION`), not assumed.
+  Doesn't block anything verified so far (DEMO_MODE=True covers every
+  route this build's own verification exercised), but any live-mode Claude
+  call (CFIUS intake, DIB analyze, live debt screen, live brief generate)
+  will fail with a real `TypeError` until this is actually set. Flagged
+  directly rather than silently trusted.
 
 ## Test suite
 
