@@ -8,7 +8,12 @@
 <body>
   <header class="site-header">
     <a href="/" class="site-logo">Arbor</a>
-    <span class="site-tagline">Supply chain, foreign investment &amp; financial resilience intelligence</span>
+    <span class="site-tagline">Corporate due-diligence intelligence</span>
+    <form action="/search" method="post" class="header-cmd command" role="search">
+      <span class="prompt">&gt;</span>
+      <input type="text" name="query" placeholder="entity / ticker / CIK" aria-label="Search entity, ticker, or CIK">
+      <button type="submit">Search</button>
+    </form>
   </header>
   <div class="main-content">
     {% block content %}{% endblock %}

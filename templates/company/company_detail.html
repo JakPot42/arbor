@@ -1,23 +1,44 @@
 {% extends "base.html" %}
-{% block title %}{{ company.canonical_name }} — Arbor{% endblock %}
+{% block title %}{{ company.canonical_name }} / Arbor{% endblock %}
 {% block content %}
 <p class="breadcrumb"><a href="/">&larr; Search</a></p>
 
 <div class="company-header">
   <h1>{{ company.canonical_name }}</h1>
-  <div class="meta">
-    {% if company.ticker %}Ticker: {{ company.ticker }} &middot; {% endif %}
-    {% if company.cik %}CIK: {{ company.cik }}{% else %}CIK: unknown{% endif %}
+  <div class="sec-ids">
+    <span class="fld"><span class="k">Ticker</span><span class="v">{{ company.ticker or 'N/A' }}</span></span>
+    <span class="fld"><span class="k">CIK</span><span class="v">{{ company.cik or 'N/A' }}</span></span>
+    {% if company.aliases %}<span class="fld"><span class="k">AKA</span><span class="v">{{ company.aliases|join(", ") }}</span></span>{% endif %}
   </div>
-  {% if company.aliases %}
-  <div class="aliases">Also known as: {{ company.aliases|join(", ") }}</div>
-  {% endif %}
+</div>
+
+<div class="coverage-strip">
+  <div class="cov-item">
+    <span class="cov-label">Ownership</span>
+    {% if latest_trace %}<span class="badge badge-{{ latest_trace.risk_level|lower }}">{{ latest_trace.risk_level }}</span>{% else %}<span class="cov-none">None</span>{% endif %}
+  </div>
+  <div class="cov-item">
+    <span class="cov-label">CFIUS</span>
+    {% if screening_risk %}<span class="badge badge-{{ screening_risk.tier|lower }}">{{ screening_risk.tier }}</span>{% elif latest_screening %}<span class="badge badge-blue">Screened</span>{% else %}<span class="cov-none">None</span>{% endif %}
+  </div>
+  <div class="cov-item">
+    <span class="cov-label">Resilience</span>
+    {% if assessment %}<span class="badge badge-{{ assessment.combined_risk_level|lower }}">{{ assessment.combined_risk_level }}</span>{% else %}<span class="cov-none">None</span>{% endif %}
+  </div>
+  <div class="cov-item">
+    <span class="cov-label">Debt</span>
+    {% if latest_debt_risk %}<span class="badge badge-{{ latest_debt_risk.tier|lower }}">{{ latest_debt_risk.tier }}</span>{% else %}<span class="cov-none">None</span>{% endif %}
+  </div>
+  <div class="cov-item">
+    <span class="cov-label">M&amp;A</span>
+    {% if latest_brief %}<span class="badge badge-{{ latest_brief.overall_risk_tier|lower }}">{{ latest_brief.overall_risk_tier }}</span>{% else %}<span class="cov-none">None</span>{% endif %}
+  </div>
 </div>
 
 <div class="card-grid">
 
   <div class="tool-card">
-    <h3>GhostTrace — Ownership Trace</h3>
+    <h3>GhostTrace / Ownership Trace</h3>
     {% if latest_trace %}
       <div class="card-row">
         <span class="label">Risk level</span>
@@ -34,7 +55,7 @@
   </div>
 
   <div class="tool-card">
-    <h3>CFIUS Screener — Jurisdiction Status</h3>
+    <h3>CFIUS Screener / Jurisdiction Status</h3>
     {% if latest_screening %}
       <div class="card-row">
         <span class="label">Outcome</span>
@@ -54,7 +75,7 @@
   </div>
 
   <div class="tool-card">
-    <h3>DIB Monitor — Financial Resilience</h3>
+    <h3>DIB Monitor / Financial Resilience</h3>
     {% if supplier and assessment %}
       <div class="card-row">
         <span class="label">Combined risk</span>
@@ -72,7 +93,7 @@
   </div>
 
   <div class="tool-card">
-    <h3>Debt Exposure Monitor — Lender Concentration</h3>
+    <h3>Debt Exposure Monitor / Lender Concentration</h3>
     {% if latest_debt_profile %}
       {% if latest_debt_risk %}
       <div class="card-row">
@@ -90,7 +111,7 @@
   </div>
 
   <div class="tool-card">
-    <h3>Pre-Acquisition Brief — M&amp;A Intelligence</h3>
+    <h3>Pre-Acquisition Brief / M&amp;A Intelligence</h3>
     {% if latest_brief %}
       <div class="card-row">
         <span class="label">Overall risk</span>

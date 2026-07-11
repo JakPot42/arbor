@@ -1,16 +1,16 @@
 {% extends "base.html" %}
-{% block title %}Arbor — Search{% endblock %}
+{% block title %}Arbor / Search{% endblock %}
 {% block content %}
-<h1>Search a company</h1>
+<h1>Entity search</h1>
 <p class="muted">
-  See a company's GhostTrace ownership trace, CFIUS jurisdiction status, DIB
-  Monitor financial risk, Debt Exposure Monitor lender concentration, and
-  Pre-Acquisition Brief M&amp;A intelligence, from one page.
+  One record for a company's ownership trace, CFIUS jurisdiction status, financial
+  resilience, lender concentration, and pre-acquisition intelligence.
 </p>
 
-<form action="/search" method="post" class="search-form">
-  <input type="text" name="query" placeholder="Company name..." value="{{ query or '' }}" required autofocus>
-  <button type="submit" class="button-primary">Search</button>
+<form action="/search" method="post" class="command command-lg" role="search">
+  <span class="prompt">&gt;</span>
+  <input type="text" name="query" placeholder="entity / ticker / CIK" value="{{ query or '' }}" required autofocus>
+  <button type="submit">Search</button>
 </form>
 
 {% if search_error %}
@@ -24,7 +24,7 @@
   {% for company, score in candidates %}
   <tr>
     <td>{{ company.canonical_name }}</td>
-    <td>{{ "%.0f"|format(score) }}%</td>
+    <td class="num">{{ "%.0f"|format(score) }}%</td>
     <td><a href="/company/{{ company.id }}">View →</a></td>
   </tr>
   {% endfor %}
